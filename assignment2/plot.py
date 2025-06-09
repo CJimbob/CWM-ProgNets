@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # parameters to modify
-filename="test.data"
-label='label'
+filename="processed_ping.txt"
+label='ping'
 xlabel = 'xlabel'
 ylabel = 'ylabel'
 title='Simple plot'
