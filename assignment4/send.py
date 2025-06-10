@@ -9,8 +9,8 @@ def randomword(length):
     return ''.join(random.choice(string.ascii_lowercase) for i in range(length))
 
 def send_random_traffic(num_packets, interface, src_ip, dst_ip):
-    dst_mac = "00:00:00:00:00:01"
-    src_mac= "00:00:00:00:00:02"
+    dst_mac = "e4:5f:01:84:8c:86"
+    src_mac= "0c:37:96:5f:8a:29"
     total_pkts = 0
     port = 1024
     for i in range(num_packets):
@@ -19,7 +19,7 @@ def send_random_traffic(num_packets, interface, src_ip, dst_ip):
             p = p/UDP(sport= 50000, dport=port)/Raw(load=data)
             sendp(p, iface = interface, inter = 0.01)
             # If you want to see the contents of the packet, uncomment the line below
-            # print(p.show())
+            print(p.show())
             total_pkts += 1
     print("Sent %s packets in total" % total_pkts)
 
