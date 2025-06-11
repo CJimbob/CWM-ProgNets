@@ -16,7 +16,8 @@ header ethernet_t {
 }
 
 struct metadata {
-    /* empty */
+    /* empty */	
+    
 }
 
 struct headers {
