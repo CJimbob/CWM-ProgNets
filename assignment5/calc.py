@@ -69,7 +69,7 @@ def main():
     p = make_seq(num_parser, make_seq(op_parser,num_parser))
     s = ''
     #iface = get_if()
-    iface = "veth0-1"
+    iface = "enx0c37965f8a29"
 
     while True:
         s = input('> ')
@@ -78,13 +78,13 @@ def main():
         print(s)
         try:
             i,ts = p(s,0,[])
-            pkt = Ether(dst='00:04:00:00:00:00', type=0x1234) / P4calc(op=ts[1].value,
+            pkt = Ether(dst='e4:5f:01:84:8c:86', type=0x1234) / P4calc(op=ts[1].value,
                                               operand_a=int(ts[0].value),
                                               operand_b=int(ts[2].value))
 
             pkt = pkt/' '
 
-            #pkt.show()
+            pkt.show()
             resp = srp1(pkt, iface=iface,timeout=5, verbose=False)
             if resp:
                 p4calc=resp[P4calc]
