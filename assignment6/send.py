@@ -8,9 +8,11 @@ from scapy.all import *
 class Order(Packet):
     name = "Order"
     fields_desc = [
+    	StrFixedLenField('messageType', 'A', length=1),
         StrFixedLenField("orderID", "12345678", length=8),
         IntField("orderBookID", "1234"),
         StrFixedLenField("side", "B", length=1),  # 'B' or 'S'
+        IntField('price', '0'),
         StrFixedLenField('decision', '1', length=1)
     ]
     
@@ -55,20 +57,20 @@ def make_seq(p1, p2):
 if __name__ == '__main__':
 
 	while True:
-		print("Enter order in format: <orderID> <orderBookID> <side>")
+		print("Enter order in format: <messageType> <orderID> <orderBookID> <side> <price>")
 		s = input('> ')
 		if s.strip().lower() == "quit":
 		    break
 		try:
 		    tokens = s.strip().split()
-		    if len(tokens) != 3:
-		        raise ValueError("Expected 3 tokens: <orderID> <orderBookID> <side>")
+		    if len(tokens) != 5:
+		        raise ValueError("Expected 5 tokens: <messageType> <orderID> <orderBookID> <side> <price>")
 
-		    orderID, orderBookID, side = tokens
+		    messageType, orderID, orderBookID, side, price = tokens
 		    
 
 		    pkt = Ether(dst="e4:5f:01:84:8c:86", src="0c:37:96:5f:8a:29", type=0x1234) / \
-		          Order(orderID=orderID, orderBookID=int(orderBookID), side=side, decision=0) 
+		          Order(messageType=messageType, orderID=orderID, orderBookID=int(orderBookID), side=side, price=int(price), decision=0) 
 		    pkt.show()
 		    resp = srp1(pkt, iface='enx0c37965f8a29', timeout=2, verbose=False)
 		    if resp and Order in resp:

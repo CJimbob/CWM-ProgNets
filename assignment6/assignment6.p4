@@ -7,16 +7,22 @@
 typedef bit<48> macAddr_t;
 
 
-const bit<8> EXECUTEORDER = 0x45;    // 'E'
+const bit<8> EXECUTE = 0x45;    // 'E'
+const bit<8> ADD = 0x41; // 'A'
+
 const bit<8> SELL = 0x53; // 'S'
 const bit<8> BUY = 0x42; // 'B'
+
+
 
 const bit<16> ORDER = 0x1234;
 
 header order_t {
+	bit<8> messageType; // 'E' 'A'
 	bit<64> orderID;
 	bit<32> orderBookID;
 	bit<8> side;
+	bit<32> price;
 	bit<8> decision;
 }
 
@@ -89,8 +95,13 @@ control MyVerifyChecksum(inout headers hdr,
 /*************************************************************************
  **************  I N G R E S S   P R O C E S S I N G   *******************
  *************************************************************************/
-register<bit<32>>(48) buyr;
-register<bit<32>>(48) sellr;
+register<bit<32>>(10) buyr;
+register<bit<32>>(10) sellr;
+
+
+register<bit<32>>(100) buyprice;
+register<bit<32>>(100) sellprice;
+
 
 control MyIngress(inout headers hdr,
                   inout metadata meta,
@@ -103,11 +114,35 @@ control MyIngress(inout headers hdr,
 	    hdr.ethernet.srcAddr = tmp;
 	    standard_metadata.egress_spec = standard_metadata.ingress_port;
 	}
-
-
+	
+	action execute(bit<8> count, out bit<32> price_r) {
+		bit<32> sellcount;
+		sellr.read(sellcount,hdr.order.orderBookID);
+		bit<32> buycount;
+		buyr.read(buycount,hdr.order.orderBookID);
+		bit<32> price_r;
+		hdr.order.messageType = EXECUTE;
+		if (hdr.order.side == BUY) {
+			sellprice.read(hdr.order.orderBookID*10 + count, price_r);
+			if (price_r < hdr.order.price) {
+				hdr.order.decision = 1;
+			} 
+		}
+				
+		else if (hdr.order.side == SELL) {
+			buyprice.read(hdr.order.orderBookID*10 + count, price_r);
+			if (price_r > hdr.order.price) {
+				hdr.order.decision = 1;
+			} 
+		} else {
+			hdr.order.decision = 0;
+		}
+		
+	}
+	
 
 	action sell() {
-		
+		hdr.order.messageType = ADD;
 		bit<32> sellcount;
 		sellr.read(sellcount,hdr.order.orderBookID);
 		bit<32> buycount;
@@ -115,6 +150,8 @@ control MyIngress(inout headers hdr,
 		sellcount = sellcount + 1;
 		sellr.write(hdr.order.orderBookID, sellcount);
 
+		sellprice.write(hdr.order.orderBookID*10 + sellcount, hdr.order.price);
+		
 		
 		if (sellcount < buycount) {
 			hdr.order.decision = BUY;
@@ -122,8 +159,10 @@ control MyIngress(inout headers hdr,
 			hdr.order.decision = SELL;
 		}
 		send_back();
+		execute(0);
 	}
 	action buy() {
+		hdr.order.messageType = ADD;
 		bit<32> sellcount;
 		sellr.read(sellcount, hdr.order.orderBookID);
 		bit<32> buycount;
@@ -131,7 +170,9 @@ control MyIngress(inout headers hdr,
 		
 		buycount = buycount + 1;
 		buyr.write(hdr.order.orderBookID, buycount);
-
+		
+		buyprice.write(hdr.order.orderBookID*10 + buycount, hdr.order.price);
+		
 		
 		if (sellcount < buycount) {
 			hdr.order.decision = BUY;
@@ -139,6 +180,7 @@ control MyIngress(inout headers hdr,
 			hdr.order.decision = SELL;
 		}
 		send_back();
+		execute(0);
 	}
 	
 	
@@ -166,9 +208,23 @@ control MyIngress(inout headers hdr,
     }
 
     apply {
-
+	bit<8> price_r;
         if (hdr.order.isValid()) {
-            calculate.apply();
+        	calculate.apply();
+		execute(0);
+		execute(1);
+		execute(2);
+		execute(3);
+		execute(4);
+		execute(5);
+		execute(6);
+		execute(7);
+		execute(8);
+		execute(9);
+	       	if (price_r > hdr.order.price) {
+	       	
+	       	}
+		
         } else {
             operation_drop();
         }
