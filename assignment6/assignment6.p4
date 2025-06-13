@@ -90,8 +90,7 @@ control MyVerifyChecksum(inout headers hdr,
  *************************************************************************/
 register<bit<48>>(48) buyr;
 register<bit<48>>(48) sellr;
-
-	
+register<bit<48>>(48) countPacket;
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
@@ -103,7 +102,8 @@ control MyIngress(inout headers hdr,
 	    hdr.ethernet.srcAddr = tmp;
 	    standard_metadata.egress_spec = standard_metadata.ingress_port;
 	}
-	
+
+
 
 	action sell() {
 		bit<48> sellcount;
@@ -163,9 +163,8 @@ control MyIngress(inout headers hdr,
         }
     }
 
-    apply {	
-	buyr.write(0,0);
-	sellr.write(0,0);
+    apply {
+
         if (hdr.order.isValid()) {
             calculate.apply();
         } else {
