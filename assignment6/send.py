@@ -9,6 +9,7 @@ class Order(Packet):
     name = "Order"
     fields_desc = [
         StrFixedLenField("orderID", "12345678", length=8),
+        IntField("orderBookID", "1234"),
         StrFixedLenField("side", "B", length=1),  # 'B' or 'S'
         StrFixedLenField('decision', '1', length=1)
     ]
@@ -54,20 +55,20 @@ def make_seq(p1, p2):
 if __name__ == '__main__':
 
 	while True:
-		print("Enter order in format: <orderID> <side>")
+		print("Enter order in format: <orderID> <orderBookID> <side>")
 		s = input('> ')
 		if s.strip().lower() == "quit":
 		    break
 		try:
 		    tokens = s.strip().split()
-		    if len(tokens) != 2:
-		        raise ValueError("Expected 2 tokens: <orderID> <side>")
+		    if len(tokens) != 3:
+		        raise ValueError("Expected 3 tokens: <orderID> <orderBookID> <side>")
 
-		    orderID, side = tokens
+		    orderID, orderBookID, side = tokens
 		    
 
 		    pkt = Ether(dst="e4:5f:01:84:8c:86", src="0c:37:96:5f:8a:29", type=0x1234) / \
-		          Order(orderID=orderID, side=side, decision=0) 
+		          Order(orderID=orderID, orderBookID=int(orderBookID), side=side, decision=0) 
 		    pkt.show()
 		    resp = srp1(pkt, iface='enx0c37965f8a29', timeout=2, verbose=False)
 		    if resp and Order in resp:

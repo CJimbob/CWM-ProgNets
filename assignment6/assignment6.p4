@@ -15,6 +15,7 @@ const bit<16> ORDER = 0x1234;
 
 header order_t {
 	bit<64> orderID;
+	bit<32> orderBookID;
 	bit<8> side;
 	bit<8> decision;
 }
@@ -88,9 +89,9 @@ control MyVerifyChecksum(inout headers hdr,
 /*************************************************************************
  **************  I N G R E S S   P R O C E S S I N G   *******************
  *************************************************************************/
-register<bit<48>>(48) buyr;
-register<bit<48>>(48) sellr;
-register<bit<48>>(48) countPacket;
+register<bit<32>>(48) buyr;
+register<bit<32>>(48) sellr;
+
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
@@ -106,12 +107,13 @@ control MyIngress(inout headers hdr,
 
 
 	action sell() {
-		bit<48> sellcount;
-		sellr.read(sellcount,0);
-		bit<48> buycount;
-		buyr.read(buycount,0);
+		
+		bit<32> sellcount;
+		sellr.read(sellcount,hdr.order.orderBookID);
+		bit<32> buycount;
+		buyr.read(buycount,hdr.order.orderBookID);
 		sellcount = sellcount + 1;
-		sellr.write(0, sellcount);
+		sellr.write(hdr.order.orderBookID, sellcount);
 
 		
 		if (sellcount < buycount) {
@@ -122,13 +124,13 @@ control MyIngress(inout headers hdr,
 		send_back();
 	}
 	action buy() {
-		bit<48> sellcount;
-		sellr.read(sellcount,0);
-		bit<48> buycount;
-		buyr.read(buycount,0);
+		bit<32> sellcount;
+		sellr.read(sellcount, hdr.order.orderBookID);
+		bit<32> buycount;
+		buyr.read(buycount,hdr.order.orderBookID);
 		
 		buycount = buycount + 1;
-		buyr.write(0, buycount);
+		buyr.write(hdr.order.orderBookID, buycount);
 
 		
 		if (sellcount < buycount) {
